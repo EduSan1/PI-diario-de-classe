@@ -1,0 +1,16 @@
+# Documentação interna — não vai para o repositório
+docs/
+.github/
+
+# Maven
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# SO
+.DS_Store
+Thumbs.db
