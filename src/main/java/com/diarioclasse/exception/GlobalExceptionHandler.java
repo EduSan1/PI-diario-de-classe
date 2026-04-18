@@ -2,6 +2,7 @@ package com.diarioclasse.exception;
 
 import com.diarioclasse.dto.response.ErroResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -38,6 +39,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleConflito(ConflitoException ex,
                                                         HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErroResponse> handleIntegridade(DataIntegrityViolationException ex,
+                                                           HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT, "Dado já cadastrado viola restrição de unicidade", request);
     }
 
     @ExceptionHandler(AcessoNegadoException.class)
