@@ -2,6 +2,7 @@
 docs/
 .github/
 postman/
+prs/
 
 # Maven
 target/
