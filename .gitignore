@@ -1,6 +1,7 @@
 # Documentação interna — não vai para o repositório
 docs/
 .github/
+postman/
 
 # Maven
 target/

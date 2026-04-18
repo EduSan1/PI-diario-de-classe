@@ -1,4 +1,4 @@
-﻿package com.diarioclasse.exception;
+package com.diarioclasse.exception;
 
 public class RecursoNaoEncontradoException extends RuntimeException {
     public RecursoNaoEncontradoException( String mensagem) {

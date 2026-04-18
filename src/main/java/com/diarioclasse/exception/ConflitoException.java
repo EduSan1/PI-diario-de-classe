@@ -1,4 +1,4 @@
-﻿package com.diarioclasse.exception;
+package com.diarioclasse.exception;
 
 public class ConflitoException extends RuntimeException {
     public ConflitoException( String mensagem) {
