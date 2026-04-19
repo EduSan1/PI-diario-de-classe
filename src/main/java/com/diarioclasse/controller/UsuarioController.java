@@ -3,6 +3,7 @@ package com.diarioclasse.controller;
 import com.diarioclasse.dto.request.AtualizarUsuarioRequest;
 import com.diarioclasse.dto.request.CriarUsuarioRequest;
 import com.diarioclasse.dto.response.ErroResponse;
+import com.diarioclasse.dto.response.PaginaResponse;
 import com.diarioclasse.dto.response.UsuarioResponse;
 import com.diarioclasse.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,8 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -42,10 +43,12 @@ public class UsuarioController {
             @ApiResponse(responseCode = "403", description = "Acesso negado",
                     content = @Content(schema = @Schema(implementation = ErroResponse.class)))
     })
-    public ResponseEntity<Page<UsuarioResponse>> listar(
+    public ResponseEntity<PaginaResponse<UsuarioResponse>> listar(
             @PageableDefault(size = 20) Pageable pageable,
-            @RequestParam(required = false) String status) {
-        return ResponseEntity.ok(usuarioService.listar(pageable, status));
+            @RequestParam(required = false) String status,
+            HttpServletRequest request) {
+        return ResponseEntity.ok(
+                PaginaResponse.from(usuarioService.listar(pageable, status), request.getRequestURL().toString()));
     }
 
     @GetMapping("/{id}")
