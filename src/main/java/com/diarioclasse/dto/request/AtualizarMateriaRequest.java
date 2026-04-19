@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 
 public record AtualizarMateriaRequest(
         @NotBlank String nome,
-        @NotNull @Min(1) Integer cargaHoraria,
-        @NotNull @Min(0) @Max(10) Integer notaDeCorte,
+        @NotNull @Min(value = 1, message = "cargaHoraria deve ser maior que zero") Integer cargaHoraria,
+        @NotNull @Min(value = 0, message = "notaDeCorte deve estar entre 0 e 10") @Max(value = 10, message = "notaDeCorte deve estar entre 0 e 10") Integer notaDeCorte,
         Boolean obrigatoria
 ) {}

@@ -56,17 +56,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErroResponse> handleValidacao(MethodArgumentNotValidException ex,
                                                          HttpServletRequest request) {
-        List<String> campos = ex.getBindingResult().getFieldErrors().stream()
-                .map(FieldError::getField)
+        List<FieldError> errors = ex.getBindingResult().getFieldErrors();
+
+        boolean somenteCamposObrigatorios = errors.stream()
+                .allMatch(e -> e.getCode() != null &&
+                        (e.getCode().startsWith("NotNull") || e.getCode().startsWith("NotBlank")
+                                || e.getCode().startsWith("NotEmpty")));
+
+        if (somenteCamposObrigatorios) {
+            List<String> campos = errors.stream().map(FieldError::getField).collect(Collectors.toList());
+            return ResponseEntity.badRequest().body(new ErroResponse(
+                    HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                    "campos obrigatorios nao enviados", request.getRequestURI(), campos));
+        }
+
+        List<String> campos = errors.stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
                 .collect(Collectors.toList());
-        ErroResponse body = new ErroResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                "campos obrigatorios nao enviados",
-                request.getRequestURI(),
-                campos
-        );
-        return ResponseEntity.badRequest().body(body);
+        return ResponseEntity.badRequest().body(new ErroResponse(
+                HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "dados invalidos", request.getRequestURI(), campos));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
