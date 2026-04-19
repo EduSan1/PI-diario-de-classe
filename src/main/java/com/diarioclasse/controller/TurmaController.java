@@ -3,6 +3,7 @@ package com.diarioclasse.controller;
 import com.diarioclasse.dto.request.AtualizarTurmaRequest;
 import com.diarioclasse.dto.request.CriarTurmaRequest;
 import com.diarioclasse.dto.response.ErroResponse;
+import com.diarioclasse.dto.response.PaginaResponse;
 import com.diarioclasse.dto.response.TurmaResponse;
 import com.diarioclasse.service.TurmaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,8 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -42,8 +43,11 @@ public class TurmaController {
             @ApiResponse(responseCode = "403", description = "Acesso negado",
                     content = @Content(schema = @Schema(implementation = ErroResponse.class)))
     })
-    public ResponseEntity<Page<TurmaResponse>> listar(@PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(turmaService.listar(pageable));
+    public ResponseEntity<PaginaResponse<TurmaResponse>> listar(
+            @PageableDefault(size = 20) Pageable pageable,
+            HttpServletRequest request) {
+        return ResponseEntity.ok(
+                PaginaResponse.from(turmaService.listar(pageable), request.getRequestURL().toString()));
     }
 
     @GetMapping("/{id}")
