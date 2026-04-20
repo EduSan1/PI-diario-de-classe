@@ -7,4 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ProfessorMateriaRepository extends JpaRepository<ProfessorMateria, ProfessorMateriaId> {
 
     boolean existsByIdIdMateria(Integer idMateria);
+
+    void deleteByIdIdProfessor(Integer idProfessor);
 }
+

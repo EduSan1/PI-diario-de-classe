@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -31,4 +33,7 @@ public class Professor {
 
     @Column(name = "especialidade_principal", length = 50)
     private String especialidadePrincipal;
+
+    @OneToMany(mappedBy = "professor", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ProfessorMateria> materias = new ArrayList<>();
 }
