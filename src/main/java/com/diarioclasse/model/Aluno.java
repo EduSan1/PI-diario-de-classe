@@ -23,8 +23,9 @@ public class Aluno {
     @Column(unique = true, length = 15)
     private String ra;
 
-    @Column(name = "id_turma")
-    private Integer idTurma;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_turma")
+    private Turma turma;
 
     @Column(name = "data_nascimento")
     private LocalDate dataNascimento;
