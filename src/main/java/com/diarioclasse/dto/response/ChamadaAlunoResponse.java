@@ -1,14 +1,11 @@
 package com.diarioclasse.dto.response;
 
-import java.time.LocalDate;
-
-public record PresencaResponse(
+public record ChamadaAlunoResponse(
         Integer id,
         Integer idAluno,
-        String nomeAluno,
         Integer idMateria,
-        String materia,
-        LocalDate data,
+        String nomeAluno,
         Boolean presente,
         String observacao
-) {}
+) {
+}

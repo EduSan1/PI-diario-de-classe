@@ -18,6 +18,7 @@ public class PresencaMapper {
                 p.getId(),
                 p.getAluno().getId(),
                 p.getAluno().getUsuario().getNome(),
+            p.getMateria().getId(),
                 p.getMateria().getNome(),
                 p.getData(),
                 p.getPresente(),

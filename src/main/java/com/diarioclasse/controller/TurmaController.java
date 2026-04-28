@@ -4,6 +4,7 @@ import com.diarioclasse.dto.request.AtualizarTurmaRequest;
 import com.diarioclasse.dto.request.CriarTurmaRequest;
 import com.diarioclasse.dto.response.ErroResponse;
 import com.diarioclasse.dto.response.PaginaResponse;
+import com.diarioclasse.dto.response.TurmaMateriaResponse;
 import com.diarioclasse.dto.response.TurmaResponse;
 import com.diarioclasse.service.TurmaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -106,5 +107,24 @@ public class TurmaController {
     public ResponseEntity<Void> remover(@PathVariable Integer id) {
         turmaService.remover(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{idTurma}/materias/{idMateria}/professor/{idProfessor}")
+    @Operation(summary = "Atribuir professor por matéria na turma",
+            description = "Cria ou atualiza a atribuição da matéria na turma, definindo o professor responsável.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Atribuição registrada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Professor não habilitado para a matéria",
+                    content = @Content(schema = @Schema(implementation = ErroResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Turma, matéria ou professor não encontrado",
+                    content = @Content(schema = @Schema(implementation = ErroResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Acesso negado",
+                    content = @Content(schema = @Schema(implementation = ErroResponse.class)))
+    })
+    public ResponseEntity<TurmaMateriaResponse> atribuirProfessorPorMateria(
+            @PathVariable Integer idTurma,
+            @PathVariable Integer idMateria,
+            @PathVariable Integer idProfessor) {
+        return ResponseEntity.ok(turmaService.atribuirProfessorPorMateria(idTurma, idMateria, idProfessor));
     }
 }

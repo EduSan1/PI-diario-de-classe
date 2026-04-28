@@ -2,6 +2,8 @@ package com.diarioclasse.service;
 
 import com.diarioclasse.dto.request.CorrigirPresencaRequest;
 import com.diarioclasse.dto.request.LancarPresencaRequest;
+import com.diarioclasse.dto.response.ChamadaAlunoResponse;
+import com.diarioclasse.dto.response.ChamadaTurmaPorMateriaResponse;
 import com.diarioclasse.dto.response.FrequenciaResponse;
 import com.diarioclasse.dto.response.PresencaAuditoriaResponse;
 import com.diarioclasse.dto.response.PresencaRegistradaResponse;
@@ -30,6 +32,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class PresencaService {
@@ -130,11 +134,9 @@ public class PresencaService {
     // --- GET /presencas/turma/{idTurma}/data/{data} ---
 
     @Transactional(readOnly = true)
-    public List<PresencaResponse> listarPorTurmaEData(Integer idTurma, LocalDate data) {
+    public List<ChamadaTurmaPorMateriaResponse> listarPorTurmaEData(Integer idTurma, LocalDate data) {
         if (!isAdm()) {
             Professor professor = professorAtual(usuarioAtual());
-            boolean temAcesso = turmaMateriaRepository
-                    .existsByTurmaIdAndMateriaIdAndProfessorId(idTurma, null, professor.getId());
             // Verificação mais ampla: professor leciona qualquer matéria nesta turma
             boolean lecionaNaTurma = turmaMateriaRepository.findAll().stream()
                     .anyMatch(tm -> tm.getTurma().getId().equals(idTurma)
@@ -143,8 +145,24 @@ public class PresencaService {
                 throw new AcessoNegadoException("Acesso negado — você não leciona nesta turma");
             }
         }
-        return presencaRepository.findByTurmaIdAndData(idTurma, data).stream()
-                .map(presencaMapper::toResponse).toList();
+        Map<String, List<Presenca>> porMateria = presencaRepository.findByTurmaIdAndData(idTurma, data).stream()
+            .collect(Collectors.groupingBy(p -> p.getMateria().getNome()));
+
+        return porMateria.entrySet().stream()
+            .map(entry -> new ChamadaTurmaPorMateriaResponse(
+                entry.getKey(),
+                entry.getValue().stream()
+                    .map(p -> new ChamadaAlunoResponse(
+                        p.getId(),
+                        p.getAluno().getId(),
+                        p.getMateria().getId(),
+                        p.getAluno().getUsuario().getNome(),
+                        p.getPresente(),
+                        p.getObservacao()
+                    ))
+                    .toList()
+            ))
+            .toList();
     }
 
     // --- GET /presencas/me ---
@@ -166,7 +184,7 @@ public class PresencaService {
 
         if (!isAdm) {
             Professor professor = professorAtual(usuarioAtual);
-            validarAcessoProfessorAAluno(professor, presenca.getAluno());
+            validarAcessoProfessorAPresenca(professor, presenca);
 
             LocalDate hoje = LocalDate.now();
             LocalDate ontem = hoje.minusDays(1);
@@ -243,6 +261,22 @@ public class PresencaService {
                 throw new AcessoNegadoException("Acesso negado — você não leciona a matéria solicitada na turma do aluno "
                         + aluno.getUsuario().getNome());
             }
+        }
+    }
+
+    private void validarAcessoProfessorAPresenca(Professor professor, Presenca presenca) {
+        Aluno aluno = presenca.getAluno();
+        if (aluno.getTurma() == null) {
+            throw new AcessoNegadoException("Acesso negado — aluno não está vinculado a uma turma");
+        }
+
+        boolean temAcesso = turmaMateriaRepository.existsByTurmaIdAndMateriaIdAndProfessorId(
+                aluno.getTurma().getId(),
+                presenca.getMateria().getId(),
+                professor.getId());
+
+        if (!temAcesso) {
+            throw new AcessoNegadoException("Acesso negado — você não é o professor responsável por esta matéria na turma");
         }
     }
 }

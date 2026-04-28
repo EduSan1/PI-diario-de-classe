@@ -6,6 +6,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -51,6 +53,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErroResponse> handleAcessoNegado(AcessoNegadoException ex,
                                                             HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErroResponse> handleAccessDenied(AccessDeniedException ex,
+                                                            HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN, "Acesso negado", request);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErroResponse> handleAuthentication(AuthenticationException ex,
+                                                             HttpServletRequest request) {
+        return build(HttpStatus.UNAUTHORIZED, "Não autenticado", request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

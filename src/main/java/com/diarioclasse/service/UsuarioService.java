@@ -107,6 +107,7 @@ public class UsuarioService {
             throw new DadoInvalidoException("dadosAdministrador é obrigatório para o tipo ADM");
         }
         Administrador adm = new Administrador();
+        adm.setId(usuario.getId());
         adm.setUsuario(usuario);
         adm.setDepartamento(request.dadosAdministrador().departamento());
         adm.setContatoEmergencia(request.dadosAdministrador().contatoEmergencia());
@@ -118,6 +119,7 @@ public class UsuarioService {
             throw new DadoInvalidoException("dadosProfessor é obrigatório para o tipo PROFESSOR");
         }
         Professor professor = new Professor();
+        professor.setId(usuario.getId());
         professor.setUsuario(usuario);
         professor.setRegistroFuncionario(request.dadosProfessor().registroFuncionario());
         professor.setFormacaoAcademica(request.dadosProfessor().formacaoAcademica());
@@ -130,6 +132,7 @@ public class UsuarioService {
             throw new DadoInvalidoException("dadosAluno é obrigatório para o tipo ALUNO");
         }
         Aluno aluno = new Aluno();
+        aluno.setId(usuario.getId());
         aluno.setUsuario(usuario);
         aluno.setRa(request.dadosAluno().ra());
         aluno.setNomeResponsavel(request.dadosAluno().nomeResponsavel());

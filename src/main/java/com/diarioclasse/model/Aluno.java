@@ -13,7 +13,6 @@ import java.time.LocalDate;
 public class Aluno {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @OneToOne

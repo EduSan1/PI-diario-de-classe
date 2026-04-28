@@ -11,7 +11,6 @@ import lombok.Setter;
 public class Administrador {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @OneToOne

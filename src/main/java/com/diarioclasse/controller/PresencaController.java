@@ -2,6 +2,7 @@ package com.diarioclasse.controller;
 
 import com.diarioclasse.dto.request.CorrigirPresencaRequest;
 import com.diarioclasse.dto.request.LancarPresencaRequest;
+import com.diarioclasse.dto.response.ChamadaTurmaPorMateriaResponse;
 import com.diarioclasse.dto.response.ErroResponse;
 import com.diarioclasse.dto.response.FrequenciaResponse;
 import com.diarioclasse.dto.response.PresencaAuditoriaResponse;
@@ -97,7 +98,7 @@ public class PresencaController {
             @ApiResponse(responseCode = "403", description = "Acesso negado",
                     content = @Content(schema = @Schema(implementation = ErroResponse.class)))
     })
-    public ResponseEntity<List<PresencaResponse>> listarPorTurmaEData(
+        public ResponseEntity<List<ChamadaTurmaPorMateriaResponse>> listarPorTurmaEData(
             @PathVariable Integer idTurma,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
         return ResponseEntity.ok(presencaService.listarPorTurmaEData(idTurma, data));
