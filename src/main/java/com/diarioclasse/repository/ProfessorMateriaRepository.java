@@ -8,6 +8,8 @@ public interface ProfessorMateriaRepository extends JpaRepository<ProfessorMater
 
     boolean existsByIdIdMateria(Integer idMateria);
 
+    boolean existsByIdIdProfessorAndIdIdMateria(Integer idProfessor, Integer idMateria);
+
     void deleteByIdIdProfessor(Integer idProfessor);
 }
 
