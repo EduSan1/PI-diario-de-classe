@@ -87,7 +87,8 @@ public class PresencaService {
 
             if (presencaRepository.existsByAlunoIdAndMateriaIdAndData(aluno.getId(), materia.getId(), request.data())) {
                 throw new ConflitoException("Presença já registrada para o aluno " + aluno.getUsuario().getNome()
-                        + " na matéria " + materia.getNome() + " em " + request.data());
+                        + " na matéria " + materia.getNome() + " em " + request.data(),
+                        List.of("idAluno", "idMateria", "data"));
             }
 
             Presenca p = new Presenca();

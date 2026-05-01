@@ -3,6 +3,7 @@ package com.diarioclasse.service;
 import com.diarioclasse.dto.request.AtualizarNotaRequest;
 import com.diarioclasse.dto.request.LancarNotaRequest;
 import com.diarioclasse.dto.response.BoletimResponse;
+import com.diarioclasse.dto.response.BoletimTurmaItemResponse;
 import com.diarioclasse.dto.response.NotaResponse;
 import com.diarioclasse.exception.AcessoNegadoException;
 import com.diarioclasse.exception.ConflitoException;
@@ -71,7 +72,8 @@ public class NotaService {
 
         if (notaRepository.existsByAlunoIdAndMateriaId(aluno.getId(), materia.getId())) {
             throw new ConflitoException("Nota já lançada para o aluno " + aluno.getUsuario().getNome()
-                    + " na matéria " + materia.getNome() + ". Use PUT para atualizar.");
+                    + " na matéria " + materia.getNome() + ". Use PUT para atualizar.",
+                    List.of("idAluno", "idMateria"));
         }
 
         boolean aprovado = request.notaFinal().compareTo(BigDecimal.valueOf(materia.getNotaDeCorte())) >= 0;
@@ -112,13 +114,12 @@ public class NotaService {
     // --- GET /notas/turma/{idTurma} ---
 
     @Transactional(readOnly = true)
-    public List<NotaResponse> notasPorTurma(Integer idTurma) {
+    public List<BoletimTurmaItemResponse> notasPorTurma(Integer idTurma) {
         if (!turmaRepository.existsById(idTurma)) {
             throw new RecursoNaoEncontradoException("Turma com ID " + idTurma + " não encontrada");
         }
-        return notaRepository.findByTurmaId(idTurma).stream()
-                .map(notaMapper::toResponse)
-                .toList();
+        List<Nota> notas = notaRepository.findByTurmaId(idTurma);
+        return notaMapper.toBoletimTurma(notas);
     }
 
     // --- GET /notas/me ---

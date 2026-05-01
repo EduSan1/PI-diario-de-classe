@@ -3,6 +3,7 @@ package com.diarioclasse.controller;
 import com.diarioclasse.dto.request.AtualizarNotaRequest;
 import com.diarioclasse.dto.request.LancarNotaRequest;
 import com.diarioclasse.dto.response.BoletimResponse;
+import com.diarioclasse.dto.response.BoletimTurmaItemResponse;
 import com.diarioclasse.dto.response.ErroResponse;
 import com.diarioclasse.dto.response.NotaResponse;
 import com.diarioclasse.service.NotaService;
@@ -90,7 +91,7 @@ public class NotaController {
             @ApiResponse(responseCode = "404", description = "Turma não encontrada",
                     content = @Content(schema = @Schema(implementation = ErroResponse.class)))
     })
-    public ResponseEntity<List<NotaResponse>> notasPorTurma(@PathVariable Integer idTurma) {
+    public ResponseEntity<List<BoletimTurmaItemResponse>> notasPorTurma(@PathVariable Integer idTurma) {
         return ResponseEntity.ok(notaService.notasPorTurma(idTurma));
     }
 

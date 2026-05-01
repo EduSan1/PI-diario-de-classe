@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class UsuarioService {
@@ -57,7 +58,7 @@ public class UsuarioService {
     @Transactional
     public UsuarioResponse criar(CriarUsuarioRequest request) {
         if (usuarioRepository.existsByUsuario(request.usuario().toLowerCase())) {
-            throw new ConflitoException("Usuário '" + request.usuario() + "' já existe");
+            throw new ConflitoException("Usuário '" + request.usuario() + "' já existe", List.of("usuario"));
         }
 
         Usuario usuario = new Usuario();
@@ -86,7 +87,7 @@ public class UsuarioService {
 
         if (!usuario.getUsuario().equals(request.usuario().toLowerCase())
                 && usuarioRepository.existsByUsuario(request.usuario().toLowerCase())) {
-            throw new ConflitoException("Usuário '" + request.usuario() + "' já existe");
+            throw new ConflitoException("Usuário '" + request.usuario() + "' já existe", List.of("usuario"));
         }
 
         usuario.setNome(request.nome());

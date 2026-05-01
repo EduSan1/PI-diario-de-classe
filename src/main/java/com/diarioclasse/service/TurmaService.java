@@ -153,7 +153,8 @@ public class TurmaService {
 
         if (existe) {
             throw new ConflitoException(
-                    "Já existe uma turma com série " + serie + letra + " no ano " + ano);
+                    "Já existe uma turma com série " + serie + letra + " no ano " + ano,
+                    List.of("serieEscolar", "letraTurma", "ano"));
         }
     }
 
