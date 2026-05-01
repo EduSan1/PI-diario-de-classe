@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -40,13 +42,31 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflitoException.class)
     public ResponseEntity<ErroResponse> handleConflito(ConflitoException ex,
                                                         HttpServletRequest request) {
-        return build(HttpStatus.CONFLICT, ex.getMessage(), request);
+        ErroResponse body = new ErroResponse(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI(),
+                ex.getCampos()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErroResponse> handleIntegridade(DataIntegrityViolationException ex,
                                                            HttpServletRequest request) {
-        return build(HttpStatus.CONFLICT, "Dado já cadastrado viola restrição de unicidade", request);
+        List<String> campos = extrairCamposDoConstraint(ex);
+        String mensagem = campos != null && !campos.isEmpty()
+                ? "Dado(s) [" + String.join(", ", campos) + "] já cadastrado(s) viola(m) restrição de unicidade"
+                : "Dado já cadastrado viola restrição de unicidade";
+        ErroResponse body = new ErroResponse(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                mensagem,
+                request.getRequestURI(),
+                campos
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(AcessoNegadoException.class)
@@ -111,5 +131,18 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(status).body(body);
+    }
+
+    private List<String> extrairCamposDoConstraint(DataIntegrityViolationException ex) {
+        Throwable cause = ex.getMostSpecificCause();
+        String msg = cause.getMessage();
+        if (msg == null) return null;
+        // PostgreSQL: Detail: Key (campo)=(valor) already exists.
+        Matcher matcher = Pattern.compile("Key \\(([^)]+)\\)=").matcher(msg);
+        if (matcher.find()) {
+            String campos = matcher.group(1);
+            return List.of(campos.split(",\\s*"));
+        }
+        return null;
     }
 }

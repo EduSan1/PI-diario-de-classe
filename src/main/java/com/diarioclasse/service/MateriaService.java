@@ -14,6 +14,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class MateriaService {
 
@@ -40,7 +42,7 @@ public class MateriaService {
     @Transactional
     public MateriaResponse criar(CriarMateriaRequest request) {
         if (materiaRepository.existsByNome(request.nome())) {
-            throw new ConflitoException("Já existe uma matéria com o nome '" + request.nome() + "'");
+            throw new ConflitoException("Já existe uma matéria com o nome '" + request.nome() + "'", List.of("nome"));
         }
 
         Materia materia = new Materia();
@@ -57,7 +59,7 @@ public class MateriaService {
         Materia materia = buscarEntidade(id);
 
         if (materiaRepository.existsByNomeAndIdNot(request.nome(), id)) {
-            throw new ConflitoException("Já existe uma matéria com o nome '" + request.nome() + "'");
+            throw new ConflitoException("Já existe uma matéria com o nome '" + request.nome() + "'", List.of("nome"));
         }
 
         materia.setNome(request.nome());
