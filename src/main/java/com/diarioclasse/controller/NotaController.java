@@ -6,6 +6,7 @@ import com.diarioclasse.dto.response.BoletimResponse;
 import com.diarioclasse.dto.response.BoletimTurmaItemResponse;
 import com.diarioclasse.dto.response.ErroResponse;
 import com.diarioclasse.dto.response.NotaResponse;
+import com.diarioclasse.dto.response.NotaTurmaAlunoResponse;
 import com.diarioclasse.service.NotaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -80,6 +81,23 @@ public class NotaController {
     })
     public ResponseEntity<BoletimResponse> boletimPorAluno(@PathVariable Integer idAluno) {
         return ResponseEntity.ok(notaService.boletimPorAluno(idAluno));
+    }
+
+    @GetMapping("/turma/{idTurma}/materia/{idMateria}")
+    @PreAuthorize("hasAnyRole('ADM', 'PROFESSOR')")
+    @Operation(summary = "Notas por turma e matéria",
+            description = "Retorna todos os alunos da turma com a nota na matéria informada. " +
+                    "Se o aluno ainda não tem nota, os campos notaId, notaFinal e aprovado virão como null. " +
+                    "Use notaId para decidir entre POST (null) e PUT (não null).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Turma ou matéria não encontrada",
+                    content = @Content(schema = @Schema(implementation = ErroResponse.class)))
+    })
+    public ResponseEntity<List<NotaTurmaAlunoResponse>> notasPorTurmaEMateria(
+            @PathVariable Integer idTurma,
+            @PathVariable Integer idMateria) {
+        return ResponseEntity.ok(notaService.listarPorTurmaEMateria(idTurma, idMateria));
     }
 
     @GetMapping("/turma/{idTurma}")

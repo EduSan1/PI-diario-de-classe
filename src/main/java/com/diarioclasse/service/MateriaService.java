@@ -3,14 +3,18 @@ package com.diarioclasse.service;
 import com.diarioclasse.dto.request.AtualizarMateriaRequest;
 import com.diarioclasse.dto.request.CriarMateriaRequest;
 import com.diarioclasse.dto.response.MateriaResponse;
+import com.diarioclasse.exception.AcessoNegadoException;
 import com.diarioclasse.exception.ConflitoException;
 import com.diarioclasse.exception.RecursoNaoEncontradoException;
 import com.diarioclasse.mapper.MateriaMapper;
 import com.diarioclasse.model.Materia;
 import com.diarioclasse.repository.MateriaRepository;
 import com.diarioclasse.repository.ProfessorMateriaRepository;
+import com.diarioclasse.repository.ProfessorRepository;
+import com.diarioclasse.repository.UsuarioRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,18 +25,36 @@ public class MateriaService {
 
     private final MateriaRepository materiaRepository;
     private final ProfessorMateriaRepository professorMateriaRepository;
+    private final ProfessorRepository professorRepository;
+    private final UsuarioRepository usuarioRepository;
     private final MateriaMapper mapper;
 
     public MateriaService(MateriaRepository materiaRepository,
                           ProfessorMateriaRepository professorMateriaRepository,
+                          ProfessorRepository professorRepository,
+                          UsuarioRepository usuarioRepository,
                           MateriaMapper mapper) {
         this.materiaRepository = materiaRepository;
         this.professorMateriaRepository = professorMateriaRepository;
+        this.professorRepository = professorRepository;
+        this.usuarioRepository = usuarioRepository;
         this.mapper = mapper;
     }
 
     public Page<MateriaResponse> listar(Pageable pageable) {
-        return materiaRepository.findAll(pageable).map(mapper::toResponse);
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdm = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADM"));
+
+        if (isAdm) {
+            return materiaRepository.findAll(pageable).map(mapper::toResponse);
+        }
+
+        var professor = usuarioRepository.findByUsuario(auth.getName())
+                .flatMap(u -> professorRepository.findByUsuarioId(u.getId()))
+                .orElseThrow(() -> new AcessoNegadoException("Acesso negado"));
+
+        return materiaRepository.findAllByProfessor(professor.getId(), pageable).map(mapper::toResponse);
     }
 
     public MateriaResponse buscarPorId(Integer id) {

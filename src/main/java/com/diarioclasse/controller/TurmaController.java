@@ -26,9 +26,8 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/api/v1/turmas")
-@Tag(name = "Turmas", description = "Gerenciamento de turmas — acesso restrito a ADM")
+@Tag(name = "Turmas", description = "Gerenciamento de turmas")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('ADM')")
 public class TurmaController {
 
     private final TurmaService turmaService;
@@ -38,7 +37,8 @@ public class TurmaController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar turmas", description = "Retorna todas as turmas com paginação")
+    @PreAuthorize("hasAnyRole('ADM', 'PROFESSOR')")
+    @Operation(summary = "Listar turmas", description = "ADM vê todas as turmas. PROFESSOR vê apenas as turmas onde é regente ou leciona.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso"),
             @ApiResponse(responseCode = "403", description = "Acesso negado",
@@ -52,6 +52,7 @@ public class TurmaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADM', 'PROFESSOR')")
     @Operation(summary = "Buscar turma por ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Turma encontrada"),
@@ -63,6 +64,7 @@ public class TurmaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADM')")
     @Operation(summary = "Criar turma")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Turma criada com sucesso"),
@@ -80,6 +82,7 @@ public class TurmaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADM')")
     @Operation(summary = "Atualizar turma")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Turma atualizada com sucesso"),
@@ -96,6 +99,7 @@ public class TurmaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADM')")
     @Operation(summary = "Remover turma")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Turma removida com sucesso"),
@@ -110,6 +114,7 @@ public class TurmaController {
     }
 
     @PutMapping("/{idTurma}/materias/{idMateria}/professor/{idProfessor}")
+    @PreAuthorize("hasRole('ADM')")
     @Operation(summary = "Atribuir professor por matéria na turma",
             description = "Cria ou atualiza a atribuição da matéria na turma, definindo o professor responsável.")
     @ApiResponses({

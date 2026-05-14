@@ -33,6 +33,8 @@ public class NotaMapper {
 
     public NotaItemResponse toItemResponse(Nota nota) {
         return new NotaItemResponse(
+                nota.getId(),
+                nota.getMateria().getId(),
                 nota.getMateria().getNome(),
                 nota.getNotaFinal(),
                 BigDecimal.valueOf(nota.getMateria().getNotaDeCorte()),
