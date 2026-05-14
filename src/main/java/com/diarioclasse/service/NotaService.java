@@ -5,6 +5,7 @@ import com.diarioclasse.dto.request.LancarNotaRequest;
 import com.diarioclasse.dto.response.BoletimResponse;
 import com.diarioclasse.dto.response.BoletimTurmaItemResponse;
 import com.diarioclasse.dto.response.NotaResponse;
+import com.diarioclasse.dto.response.NotaTurmaAlunoResponse;
 import com.diarioclasse.exception.AcessoNegadoException;
 import com.diarioclasse.exception.ConflitoException;
 import com.diarioclasse.exception.RecursoNaoEncontradoException;
@@ -67,7 +68,7 @@ public class NotaService {
         Materia materia = buscarMateria(request.idMateria());
 
         if (!isAdm()) {
-            validarAcessoProfessorAAluno(professorAtual(), aluno);
+            validarAcessoProfessorAMateriaDoAluno(professorAtual(), aluno, request.idMateria());
         }
 
         if (notaRepository.existsByAlunoIdAndMateriaId(aluno.getId(), materia.getId())) {
@@ -93,6 +94,10 @@ public class NotaService {
     @Transactional
     public NotaResponse atualizar(Integer id, AtualizarNotaRequest request) {
         Nota nota = buscarNota(id);
+
+        if (!isAdm()) {
+            validarAcessoProfessorAMateriaDoAluno(professorAtual(), nota.getAluno(), nota.getMateria().getId());
+        }
 
         boolean aprovado = request.notaFinal().compareTo(BigDecimal.valueOf(nota.getMateria().getNotaDeCorte())) >= 0;
         nota.setNotaFinal(request.notaFinal());
@@ -167,15 +172,46 @@ public class NotaService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Nota com ID " + id + " não encontrada"));
     }
 
-    private void validarAcessoProfessorAAluno(Professor professor, Aluno aluno) {
+    // --- GET /notas/turma/{idTurma}/materia/{idMateria} ---
+
+    @Transactional(readOnly = true)
+    public List<NotaTurmaAlunoResponse> listarPorTurmaEMateria(Integer idTurma, Integer idMateria) {
+        if (!turmaRepository.existsById(idTurma)) {
+            throw new RecursoNaoEncontradoException("Turma com ID " + idTurma + " não encontrada");
+        }
+        if (!materiaRepository.existsById(idMateria)) {
+            throw new RecursoNaoEncontradoException("Matéria com ID " + idMateria + " não encontrada");
+        }
+
+        List<Aluno> alunos = alunoRepository.findByTurmaId(idTurma);
+        List<Nota> notas = notaRepository.findByTurmaIdAndMateriaId(idTurma, idMateria);
+
+        return alunos.stream()
+                .map(aluno -> {
+                    Nota nota = notas.stream()
+                            .filter(n -> n.getAluno().getId().equals(aluno.getId()))
+                            .findFirst()
+                            .orElse(null);
+                    return new NotaTurmaAlunoResponse(
+                            aluno.getId(),
+                            aluno.getUsuario().getNome(),
+                            aluno.getRa(),
+                            nota != null ? nota.getId() : null,
+                            nota != null ? nota.getNotaFinal() : null,
+                            nota != null ? nota.getAprovado() : null
+                    );
+                })
+                .toList();
+    }
+
+    private void validarAcessoProfessorAMateriaDoAluno(Professor professor, Aluno aluno, Integer idMateria) {
         if (aluno.getTurma() == null) {
             throw new AcessoNegadoException("Acesso negado — aluno não está vinculado a uma turma");
         }
-        boolean lecionaNaTurma = turmaMateriaRepository.findAll().stream()
-                .anyMatch(tm -> tm.getTurma().getId().equals(aluno.getTurma().getId())
-                        && tm.getProfessor().getId().equals(professor.getId()));
-        if (!lecionaNaTurma) {
-            throw new AcessoNegadoException("Acesso negado — você não leciona na turma deste aluno");
+        boolean temAcesso = turmaMateriaRepository.existsByTurmaIdAndMateriaIdAndProfessorId(
+                aluno.getTurma().getId(), idMateria, professor.getId());
+        if (!temAcesso) {
+            throw new AcessoNegadoException("Acesso negado — você não é o professor responsável por esta matéria na turma do aluno");
         }
     }
 }

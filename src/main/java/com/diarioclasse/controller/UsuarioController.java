@@ -102,4 +102,16 @@ public class UsuarioController {
         usuarioService.desativar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/reativar")
+    @Operation(summary = "Reativar usuário", description = "Altera ativo = true sem remover dados")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Usuário reativado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado",
+                    content = @Content(schema = @Schema(implementation = ErroResponse.class)))
+    })
+    public ResponseEntity<Void> reativar(@PathVariable Integer id) {
+        usuarioService.reativar(id);
+        return ResponseEntity.noContent().build();
+    }
 }

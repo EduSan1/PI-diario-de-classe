@@ -5,6 +5,7 @@ import com.diarioclasse.dto.request.CriarTurmaRequest;
 import com.diarioclasse.dto.response.TurmaMateriaResumoResponse;
 import com.diarioclasse.dto.response.TurmaMateriaResponse;
 import com.diarioclasse.dto.response.TurmaResponse;
+import com.diarioclasse.exception.AcessoNegadoException;
 import com.diarioclasse.exception.ConflitoException;
 import com.diarioclasse.exception.DadoInvalidoException;
 import com.diarioclasse.exception.RecursoNaoEncontradoException;
@@ -18,8 +19,10 @@ import com.diarioclasse.repository.ProfessorMateriaRepository;
 import com.diarioclasse.repository.ProfessorRepository;
 import com.diarioclasse.repository.TurmaMateriaRepository;
 import com.diarioclasse.repository.TurmaRepository;
+import com.diarioclasse.repository.UsuarioRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,7 @@ public class TurmaService {
     private final MateriaRepository materiaRepository;
     private final TurmaMateriaRepository turmaMateriaRepository;
     private final ProfessorMateriaRepository professorMateriaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final TurmaMapper mapper;
 
     public TurmaService(TurmaRepository turmaRepository,
@@ -40,17 +44,31 @@ public class TurmaService {
                         MateriaRepository materiaRepository,
                         TurmaMateriaRepository turmaMateriaRepository,
                         ProfessorMateriaRepository professorMateriaRepository,
+                        UsuarioRepository usuarioRepository,
                         TurmaMapper mapper) {
         this.turmaRepository = turmaRepository;
         this.professorRepository = professorRepository;
         this.materiaRepository = materiaRepository;
         this.turmaMateriaRepository = turmaMateriaRepository;
         this.professorMateriaRepository = professorMateriaRepository;
+        this.usuarioRepository = usuarioRepository;
         this.mapper = mapper;
     }
 
     public Page<TurmaResponse> listar(Pageable pageable) {
-        return turmaRepository.findAll(pageable).map(mapper::toResponse);
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdm = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADM"));
+
+        if (isAdm) {
+            return turmaRepository.findAll(pageable).map(mapper::toResponse);
+        }
+
+        Professor professor = usuarioRepository.findByUsuario(auth.getName())
+                .flatMap(u -> professorRepository.findByUsuarioId(u.getId()))
+                .orElseThrow(() -> new AcessoNegadoException("Acesso negado"));
+
+        return turmaRepository.findAllByProfessor(professor.getId(), pageable).map(mapper::toResponse);
     }
 
     public TurmaResponse buscarPorId(Integer id) {

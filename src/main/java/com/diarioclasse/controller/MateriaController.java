@@ -25,9 +25,8 @@ import java.net.URI;
 
 @RestController
 @RequestMapping("/api/v1/materias")
-@Tag(name = "Matérias", description = "Gerenciamento de matérias — acesso restrito a ADM")
+@Tag(name = "Matérias", description = "Gerenciamento de matérias")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('ADM')")
 public class MateriaController {
 
     private final MateriaService materiaService;
@@ -37,7 +36,8 @@ public class MateriaController {
     }
 
     @GetMapping
-    @Operation(summary = "Listar matérias", description = "Retorna todas as matérias com paginação")
+    @PreAuthorize("hasAnyRole('ADM', 'PROFESSOR')")
+    @Operation(summary = "Listar matérias", description = "ADM vê todas as matérias. PROFESSOR vê apenas as matérias para as quais está habilitado.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso"),
             @ApiResponse(responseCode = "403", description = "Acesso negado",
@@ -51,6 +51,7 @@ public class MateriaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADM', 'PROFESSOR')")
     @Operation(summary = "Buscar matéria por ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Matéria encontrada"),
@@ -62,6 +63,7 @@ public class MateriaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADM')")
     @Operation(summary = "Criar matéria")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Matéria criada com sucesso"),
@@ -78,6 +80,7 @@ public class MateriaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADM')")
     @Operation(summary = "Atualizar matéria")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Matéria atualizada"),
@@ -94,6 +97,7 @@ public class MateriaController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADM')")
     @Operation(summary = "Remover matéria")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Matéria removida com sucesso"),

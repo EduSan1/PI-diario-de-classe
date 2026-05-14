@@ -103,6 +103,13 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
+    @Transactional
+    public void reativar(Integer id) {
+        Usuario usuario = buscarOuLancar(id);
+        usuario.setAtivo(true);
+        usuarioRepository.save(usuario);
+    }
+
     private void criarAdministrador(Usuario usuario, CriarUsuarioRequest request) {
         if (request.dadosAdministrador() == null) {
             throw new DadoInvalidoException("dadosAdministrador é obrigatório para o tipo ADM");

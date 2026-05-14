@@ -14,6 +14,7 @@ import com.diarioclasse.model.Professor;
 import com.diarioclasse.model.Turma;
 import com.diarioclasse.repository.AlunoRepository;
 import com.diarioclasse.repository.ProfessorRepository;
+import com.diarioclasse.repository.TurmaMateriaRepository;
 import com.diarioclasse.repository.TurmaRepository;
 import com.diarioclasse.repository.UsuarioRepository;
 import org.springframework.data.domain.Page;
@@ -30,24 +31,39 @@ public class AlunoService {
     private final AlunoRepository alunoRepository;
     private final TurmaRepository turmaRepository;
     private final ProfessorRepository professorRepository;
+    private final TurmaMateriaRepository turmaMateriaRepository;
     private final UsuarioRepository usuarioRepository;
     private final AlunoMapper alunoMapper;
 
     public AlunoService(AlunoRepository alunoRepository,
                         TurmaRepository turmaRepository,
                         ProfessorRepository professorRepository,
+                        TurmaMateriaRepository turmaMateriaRepository,
                         UsuarioRepository usuarioRepository,
                         AlunoMapper alunoMapper) {
         this.alunoRepository = alunoRepository;
         this.turmaRepository = turmaRepository;
         this.professorRepository = professorRepository;
+        this.turmaMateriaRepository = turmaMateriaRepository;
         this.usuarioRepository = usuarioRepository;
         this.alunoMapper = alunoMapper;
     }
 
     @Transactional(readOnly = true)
     public Page<AlunoResponse> listar(Pageable pageable) {
-        return alunoRepository.findAll(pageable).map(alunoMapper::toResponse);
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdm = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADM"));
+
+        if (isAdm) {
+            return alunoRepository.findAll(pageable).map(alunoMapper::toResponse);
+        }
+
+        Professor professor = usuarioRepository.findByUsuario(auth.getName())
+                .flatMap(u -> professorRepository.findByUsuarioId(u.getId()))
+                .orElseThrow(() -> new AcessoNegadoException("Acesso negado"));
+
+        return alunoRepository.findAllByProfessor(professor.getId(), pageable).map(alunoMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -92,8 +108,12 @@ public class AlunoService {
             boolean eRegente = turma.getProfessorRegente() != null
                     && turma.getProfessorRegente().getId().equals(professor.getId());
 
-            if (!eRegente) {
-                throw new AcessoNegadoException("Acesso negado — você não é o professor regente desta turma");
+            boolean lecionaNaTurma = turmaMateriaRepository.findAll().stream()
+                    .anyMatch(tm -> tm.getTurma().getId().equals(idTurma)
+                            && tm.getProfessor().getId().equals(professor.getId()));
+
+            if (!eRegente && !lecionaNaTurma) {
+                throw new AcessoNegadoException("Acesso negado — você não leciona nesta turma");
             }
         }
 

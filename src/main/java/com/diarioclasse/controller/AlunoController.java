@@ -38,8 +38,8 @@ public class AlunoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADM')")
-    @Operation(summary = "Listar alunos", description = "Retorna todos os alunos com paginação. Requer perfil ADM.")
+    @PreAuthorize("hasAnyRole('ADM', 'PROFESSOR')")
+    @Operation(summary = "Listar alunos", description = "ADM vê todos os alunos. PROFESSOR vê apenas alunos das suas turmas.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista retornada com sucesso"),
             @ApiResponse(responseCode = "403", description = "Acesso negado",
